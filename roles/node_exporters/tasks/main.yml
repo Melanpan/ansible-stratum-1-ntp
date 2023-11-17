@@ -1,0 +1,108 @@
+- name: APT | Update cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+  changed_when: false
+
+- name: APT | Install packages
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - python3-gps
+    - python3-pip
+    - git
+
+- name: PIP | Install prometheus_client
+  ansible.builtin.pip:
+    name: prometheus_client
+    state: present
+    extra_args: --break-system-packages
+
+- name: GIT | Clone gpsd-prometheus-exporter
+  ansible.builtin.git:
+    repo: https://github.com/brendanbank/gpsd-prometheus-exporter.git
+    dest: /tmp/gpsd-prometheus-exporter
+    force: true
+    depth: 1
+
+- name: COPY | Copy gpsd_exporter.py  
+  ansible.builtin.copy:
+    src: /tmp/gpsd-prometheus-exporter/gpsd_exporter.py
+    dest: /usr/local/bin/gpsd_exporter.py
+    owner: root
+    group: root
+    mode: "0755"
+    remote_src: yes
+
+- name: COPY | Copy gpsd_exporter.service
+  ansible.builtin.copy:
+    src: /tmp/gpsd-prometheus-exporter/gpsd_exporter.service
+    dest: /etc/systemd/system/gpsd_exporter.service
+    owner: root
+    group: root
+    mode: "0755"
+    remote_src: yes
+
+- name: TEMPLATE | Template gpsd_exporter
+  ansible.builtin.template:
+    src: gpsd_exporter.defaults.j2
+    dest: /etc/default/gpsd_exporter
+    owner: root
+    group: root
+    mode: "0644"
+    
+- name: SYSTEMD | Enable gpsd_exporter service
+  ansible.builtin.systemd:
+    name: gpsd_exporter
+    enabled: true
+    state: started
+
+- name: SYSTEMD | Restart gpsd_exporter service
+  ansible.builtin.systemd:
+    name: gpsd_exporter
+    state: restarted
+
+
+- name: Download | Download chrony_exporter
+  ansible.builtin.get_url: 
+    url: https://github.com/SuperQ/chrony_exporter/releases/download/v{{chrony_exporter_version}}/chrony_exporter-{{chrony_exporter_version}}.linux-{{chrony_exporter_arch}}.tar.gz
+    dest: /tmp
+    mode: "0755"
+    owner: root
+    group: root
+
+# extract chrony_exporter.tar.gz to /opt
+- name: UNARCHIVE | Extract chrony_exporter
+  ansible.builtin.unarchive:
+    src: /tmp/chrony_exporter-{{chrony_exporter_version}}.linux-{{chrony_exporter_arch}}.tar.gz
+    dest: /tmp
+    owner: root
+    group: root
+    mode: "0755"
+    remote_src: true
+
+# copy chrony_exporter to /usr/local/bin
+- name: COPY | Copy chrony_exporter to /usr/local/bin
+  ansible.builtin.copy:
+    src: /tmp/chrony_exporter-{{chrony_exporter_version}}.linux-{{chrony_exporter_arch}}/chrony_exporter
+    dest: /usr/local/bin/chrony_exporter
+    owner: root
+    group: root
+    mode: "0755"
+    remote_src: yes
+
+- name: COPY | Copy chrony_exporter.service
+  ansible.builtin.template:
+    src: chrony_exporter.service.j2
+    dest: /etc/systemd/system/chrony_exporter.service
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: SYSTEMD | Enable chrony_exporter service
+  ansible.builtin.systemd:
+    name: chrony_exporter
+    enabled: true
+    state: started
+

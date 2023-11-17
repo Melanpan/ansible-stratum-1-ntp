@@ -1,0 +1,9 @@
+[Unit]
+Description=Chrony Exporter
+Requires=chrony.service
+
+[Service]
+ExecStart=/usr/local/bin/chrony_exporter
+
+[Install]
+WantedBy=multi-user.target

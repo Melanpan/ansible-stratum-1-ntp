@@ -1,0 +1,37 @@
+---  
+- name: APT | Install azlux.fr keyring to /usr/share/keyrings
+  ansible.builtin.apt_key:
+    url: https://azlux.fr/repo.gpg
+    state: present
+    keyring: /usr/share/keyrings/azlux-archive-keyring.gpg
+
+- name: APT | Add azlux repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/azlux-archive-keyring.gpg] http://packages.azlux.fr/debian/ {{ ansible_distribution_release }} main"
+    state: present
+    filename: azlux
+
+- name: APT | Install log2ram package
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - log2ram
+
+- name: Config | set MAIL=false
+  ansible.builtin.replace:
+    path: /etc/log2ram.conf
+    regexp: '^MAIL=.*'
+    replace: 'MAIL=false'
+
+- name: Config | Set SIZE
+  ansible.builtin.replace:
+    path: /etc/log2ram.conf
+    regexp: '^SIZE=.*'
+    replace: 'SIZE={{ log2ram_size }}'
+
+- name: Systemd | Enable log2ram service
+  ansible.builtin.systemd:
+    name: log2ram
+    enabled: true
+    state: started

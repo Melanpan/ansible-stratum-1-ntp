@@ -1,0 +1,51 @@
+# code: language=ansible
+# Role that installs some useful packages
+---
+
+- name: APT | Update cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+  changed_when: false
+
+- name: APT | Install gpsd packages
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - gpsd
+    - gpsd-tools
+    - gpsd-clients
+    - libcap-dev
+    - pps-tools
+    - python3-gps
+
+# config gpsd
+- name: GPSD | Configure gpsd
+  ansible.builtin.template:
+    src: gpsd.conf.j2
+    dest: /etc/default/gpsd
+    owner: root
+    group: root
+    mode: "0644"
+
+# add gpsd user to dialout group
+- name: Add gpsd user to dialout group
+  ansible.builtin.user:
+    name: gpsd
+    groups: dialout
+    append: true
+
+- name: Add gpsd user to tty group
+  ansible.builtin.user:
+    name: gpsd
+    groups: dialout
+    append: true
+
+
+# enable and restart gpsd service
+- name: Systemd | Enable gpsd service
+  ansible.builtin.systemd:
+    name: gpsd
+    enabled: true
+    state: started

@@ -1,0 +1,27 @@
+# code: language=ansible
+- name: Provision a Stratum 1 NTP server
+  hosts: all
+  user: root
+  become: true
+  become_method: sudo
+
+
+  roles:
+    - role: bootstrap
+      tags: bootstrap
+
+    - role: log2ram
+      tags: log2ram
+
+    - role: gpsd
+      tags: gpsd
+
+    - role: chrony
+      tags: chrony
+
+    - role: node_exporters
+      tags: node_exporters
+
+  tasks:
+    - name: Reboot
+      ansible.builtin.reboot:

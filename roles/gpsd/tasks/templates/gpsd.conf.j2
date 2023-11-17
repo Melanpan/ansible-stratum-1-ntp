@@ -1,0 +1,16 @@
+# Devices gpsd should collect to at boot time.
+# They need to be read/writeable, either by user gpsd or the group dialout.
+DEVICES="{{ gpsd_devices }}"
+
+# Other options you want to pass to gpsd
+GPSD_OPTIONS="{{ gpsd_options }}"
+
+# Automatically hot add/remove USB GPS devices via gpsdctl
+USBAUTO="true"
+BAUDRATE="{{ gps_baudrate }}"
+
+/usr/bin/ubxtool -v 1  -s 9600 -S 115200 -f {{gpsd_serial_device}}
+/usr/bin/ubxtool -v 1  -s 115200 -f {{gpsd_serial_device}} -d GLONASS
+/usr/bin/ubxtool -v 1  -s 115200 -f {{gpsd_serial_device}} -e GALILEO
+/usr/bin/ubxtool -v 1  -s 115200 -f {{gpsd_serial_device}} -p SAVE
+/bin/setserial {{gpsd_serial_device}} low_latency

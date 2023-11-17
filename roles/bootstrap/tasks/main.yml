@@ -1,0 +1,121 @@
+# code: language=ansible
+# prepare raspberry pi for use with gpsd and pps
+---
+
+- name: APT | Update cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+  changed_when: false
+
+- name: APT | Install useful and needed packages
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - htop
+    - vim
+    - screen
+    - tmux
+    - git
+    - curl
+    - wget
+    - unzip
+    - zip
+    - python3-pip
+    - net-tools
+    - dnsutils
+    - iputils-ping
+    - iproute2
+    - nmap
+    - tcpdump
+    - vnstat
+    - lsof
+
+- name: Set timezone to Europe/Amsterdam
+  community.general.timezone:
+    name: Europe/Amsterdam
+
+- name: Set locale to en_US.UTF-8
+  community.general.locale_gen:
+    name: en_US.UTF-8
+    state: present
+
+- name: Add 'pps-gpio' to /etc/modules
+  ansible.builtin.lineinfile:
+    path: /etc/modules
+    line: pps-gpio
+    state: present
+
+- name: Turn off dtparam=audio in /boot/config.txt
+  ansible.builtin.lineinfile:
+    path: /boot/config.txt
+    regexp: '^dtparam=audio=on'
+    line: dtparam=audio=off
+    state: present
+
+- name: Add enable_uart=1 to /boot/config.txt
+  ansible.builtin.lineinfile:
+    path: /boot/config.txt
+    line: enable_uart=1
+    state: present
+
+- name: Add dtoverlay=disable-bt to /boot/config.txt
+  ansible.builtin.lineinfile:
+    path: /boot/config.txt
+    line: dtoverlay=disable-bt
+    state: present
+
+- name: Add dtoverlay=pps-gpio,gpiopin= to /boot/config.txt
+  ansible.builtin.lineinfile:
+    path: /boot/config.txt
+    line: dtoverlay=pps-gpio,gpiopin={{ pps_gpio_pin }}
+    state: present
+
+- name: Disable getty@ttyAMA0 service
+  ansible.builtin.systemd:
+    name: getty@ttyAMA0
+    state: stopped
+    enabled: false
+
+- name: Mask getty@ttyAMA0 service
+  ansible.builtin.systemd:
+    name: getty@ttyAMA0
+    masked: true
+
+- name: Disable serial-getty@ttyAMA0 service
+  ansible.builtin.systemd:
+    name: serial-getty@ttyAMA0
+    state: stopped
+    enabled: false
+
+- name: Mask serial-getty@ttyAMA0 service
+  ansible.builtin.systemd:
+    name: serial-getty@ttyAMA0
+    masked: true
+
+- name: Disable wpa_supplicant
+  ansible.builtin.systemd:
+    name: wpa_supplicant
+    state: stopped
+    enabled: false
+
+- name: Mask wpa_supplicant
+  ansible.builtin.systemd:
+    name: wpa_supplicant
+    masked: true
+
+- name: Disable hciuart
+  ansible.builtin.systemd:
+    name: hciuart
+    state: stopped
+    enabled: false
+
+- name: Mask hciuart
+  ansible.builtin.systemd:
+    name: hciuart
+    masked: true
+
+# Reboot
+- name: Rebooting to make changes effective
+  reboot:
