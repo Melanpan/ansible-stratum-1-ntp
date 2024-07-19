@@ -2,7 +2,7 @@
 pps_gpio_pin: 18
 gps_baudrate: 115200
 gpsd_options: "-n -G -b"
-gpsd_devices: "/dev/ttyAMA0 /dev/pps0"
+gpsd_devices: "/dev/ttyAMA0"
 gpsd_serial_device: "/dev/ttyAMA0"
 log2ram_size: 128M
 chrony_exporter_version: 0.6.1
