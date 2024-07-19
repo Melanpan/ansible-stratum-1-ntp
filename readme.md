@@ -5,7 +5,7 @@ Made to be run on Raspbian 64bit lite, make sure it's installed on a >=8gb SD.
 
 # Features
 - log2ram
-- chrony (ntp pools configured to be an NL pool)
+- ntpsec (configured to use the ntp.time.nl pool)
 - prometheus exporters
 - pps via a GPIO pin
 
@@ -32,12 +32,15 @@ Make sure it sees satalites and that you see text containing "PPS OFFSET" scroll
 #### log2ram
 `sudo systemctl status log2ram`
 
-#### chrony
+#### ntpsec
 ```
-nurds@timepi:~ $ chronyc sources
-MS Name/IP address         Stratum Poll Reach LastRx Last sample
-===============================================================================
-#* PPS                           0   4    17    19    +29ns[+1996ns] +/-  412ns                       0   4     3    14   -216ms[ -216ms] +/-  564ns
+nurds@timepi:~ $ ntpq -c pe -n
+     remote                                   refid      st t when poll reach   delay   offset   jitter
+=======================================================================================================
+*SHM(1)                                  .PPS.            0 l    8   64  357   0.0000  48.9037  64.4054
++SHM(0)                                  .GPS.            0 l    7   64  377   0.0000 -30.7004  30.7751
+ ntp.time.nl                             .POOL.          16 p    -  256    0   0.0000   0.0000   0.0005
+...
 ```
 
 *This playbook will reboot the device a couple of times.

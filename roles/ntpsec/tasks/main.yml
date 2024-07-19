@@ -11,21 +11,21 @@
   loop:
     - chrony
 
-- name: CHRONY | Configure chrony
+- name: NTPSEC | Configure ntpsec
   ansible.builtin.template:
-    src: chrony.conf.j2
-    dest: /etc/chrony/chrony.conf
+    src: ntp.conf.j2
+    dest: /etc/ntpsec/ntp.conf
     owner: root
     group: root
     mode: "0644"
 
 - name: CHRONY | Enable chrony service
   ansible.builtin.systemd:
-    name: chrony
+    name: ntpsec
     enabled: true
     state: started
 
 - name: CHRONY | Restart chrony service
   ansible.builtin.systemd:
-    name: chrony
+    name: ntpsec
     state: restarted
