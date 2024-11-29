@@ -31,6 +31,7 @@
     - tcpdump
     - vnstat
     - lsof
+    - schedutils
 
 - name: Set timezone to Europe/Amsterdam
   community.general.timezone:
@@ -47,28 +48,28 @@
     line: pps-gpio
     state: present
 
-- name: Turn off dtparam=audio in /boot/config.txt
+- name: Turn off dtparam=audio in /boot/firmware/config.txt
   ansible.builtin.lineinfile:
-    path: /boot/config.txt
+    path: /boot/firmware/config.txt
     regexp: '^dtparam=audio=on'
     line: dtparam=audio=off
     state: present
 
-- name: Add enable_uart=1 to /boot/config.txt
+- name: Add enable_uart=1 to /boot/firmware/config.txt
   ansible.builtin.lineinfile:
-    path: /boot/config.txt
+    path: /boot/firmware/config.txt
     line: enable_uart=1
     state: present
 
-- name: Add dtoverlay=disable-bt to /boot/config.txt
+- name: Add dtoverlay=disable-bt to /boot/firmware/config.txt
   ansible.builtin.lineinfile:
-    path: /boot/config.txt
+    path: /boot/firmware/config.txt
     line: dtoverlay=disable-bt
     state: present
 
-- name: Add dtoverlay=pps-gpio,gpiopin= to /boot/config.txt
+- name: Add dtoverlay=pps-gpio,gpiopin= to /boot/firmware/config.txt
   ansible.builtin.lineinfile:
-    path: /boot/config.txt
+    path: /boot/firmware/config.txt
     line: dtoverlay=pps-gpio,gpiopin={{ pps_gpio_pin }}
     state: present
 
@@ -114,6 +115,53 @@
 - name: Mask hciuart
   ansible.builtin.systemd:
     name: hciuart
+    masked: true
+
+- name: Make vim sane
+  ansible.builtin.blockinfile:
+    path: /etc/vimrc
+    block: |
+      set mouse=
+      set ttymouse=
+
+- name: Redunce jitter by disabling cpuidle & disabling dynamic scheduling & remove 1 core so that it can be used solely by ntpd
+  replace:
+    backup: yes
+    dest: /boot/firmware/cmdline.txt
+    regexp: '^\(.*\)$'
+    replace: '\1 cpuidle.off=1 nohz=off isolcpus=3'
+
+- name: Make the cpu tick-rate constant to reduce jitter
+  ansible.builtin.blockinfile:
+    path: /boot/firmware/config.txt
+    append_newline: true
+    prepend_newline: true
+    block: |
+      arm_freq=1000
+      arm_freq_min=1000
+      arm_boost=0
+
+- name: copy stuff to move ntp to its own core onto the system
+   template: src={{item.src}} dest={{item.dest}}
+   with_items:
+      - { src: 'templates/ntpsec-core4.service.j2', dest: '/etc/systemd/system/ntpsec-core4.service' }
+      - { src: 'templates/move-ntpsec.sh.j2', dest: '/root/move-ntpsec.sh' }
+
+- name: Enable ntpsec-core4.service
+  ansible.builtin.systemd:
+    name: ntpsec-core4.service
+    state: started
+    enabled: true
+
+- name: Disable ModemManager.service
+  ansible.builtin.systemd:
+    name: ModemManager
+    state: stopped
+    enabled: false
+
+- name: Mask ModemManager service
+  ansible.builtin.systemd:
+    name: ModemManager
     masked: true
 
 # Reboot

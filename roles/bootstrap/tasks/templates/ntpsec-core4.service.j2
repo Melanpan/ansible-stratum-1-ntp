@@ -1,0 +1,11 @@
+[Unit]
+Description=Move ntpsec to its own cpu
+After=ntpsec.service
+
+[Service]
+ExecStart=/root/move-ntpsec.sh
+RemainAfterExit=false
+Type=oneshot
+
+[Install]
+WantedBy=multi-user.target

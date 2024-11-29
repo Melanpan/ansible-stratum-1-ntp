@@ -10,11 +10,11 @@ leapfile /usr/share/zoneinfo/leap-seconds.list
 # nts enable
 
 # You must create /var/log/ntpsec (owned by ntpsec:ntpsec) to enable logging.
-#statsdir /var/log/ntpsec/
-#statistics loopstats peerstats clockstats
-#filegen loopstats file loopstats type day enable
-#filegen peerstats file peerstats type day enable
-#filegen clockstats file clockstats type day enable
+statsdir /var/log/ntpsec/
+statistics loopstats peerstats clockstats
+filegen loopstats file loopstats type day enable
+filegen peerstats file peerstats type day enable
+filegen clockstats file clockstats type day enable
 
 # This should be maxclock 7, but the pool entries count towards maxclock.
 tos maxclock 11
@@ -28,8 +28,8 @@ tos minclock 4 minsane 3
 # Public NTP servers supporting Network Time Security:
 # server time.cloudflare.com nts
 
-#refclock pps unit 0
-refclock shm unit 1 prefer refid PPS
+refclock pps unit 0
+#refclock shm unit 1 prefer refid PPS
 refclock shm unit 0 refid GPS
 
 pool ntp.time.nl prefer
