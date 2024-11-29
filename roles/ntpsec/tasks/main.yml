@@ -9,7 +9,7 @@
     name: "{{ item }}"
     state: present
   loop:
-    - chrony
+    - ntpsec
 
 - name: NTPSEC | Configure ntpsec
   ansible.builtin.template:
@@ -19,13 +19,13 @@
     group: root
     mode: "0644"
 
-- name: CHRONY | Enable chrony service
+- name: NTPSEC | Enable ntpsec service
   ansible.builtin.systemd:
     name: ntpsec
     enabled: true
     state: started
 
-- name: CHRONY | Restart chrony service
+- name: NTPSEC | Restart ntpsec service
   ansible.builtin.systemd:
     name: ntpsec
     state: restarted
